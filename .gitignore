@@ -1,2 +1,11 @@
 *.class
 *.log
+.DS_Store
+.metals
+.bloop
+.vscode
+.idea
+.bsp
+target/
+project/target
+metals.sbt
