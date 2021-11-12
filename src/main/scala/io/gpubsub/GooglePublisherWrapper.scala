@@ -1,4 +1,4 @@
-package gpubsub
+package io.gpubsub
 
 import com.google.api.gax.core.CredentialsProvider
 import com.google.api.gax.rpc.TransportChannelProvider

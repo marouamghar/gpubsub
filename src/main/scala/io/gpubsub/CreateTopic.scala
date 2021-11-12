@@ -1,4 +1,4 @@
-package gpubsub
+package io.gpubsub
 
 
 import com.google.api.gax.core.CredentialsProvider
@@ -12,9 +12,11 @@ import scala.util.{ChainingSyntax, Failure, Success, Try}
 object CreateTopic extends ChainingSyntax {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  def createTopic(projectId: String, topicId: String, credentialsProvider: CredentialsProvider, channelProvider: TransportChannelProvider)= {
+  def createTopic(projectId: String, topicId: String, credentialsProvider: CredentialsProvider, channelProvider: Option[TransportChannelProvider])= {
     val topicName: TopicName = TopicName.of(projectId, topicId)
-    val topicAdminClient = TopicAdminClient.create(TopicAdminSettings.newBuilder.setTransportChannelProvider(channelProvider).setCredentialsProvider(credentialsProvider).build)
+    val builder = TopicAdminSettings.newBuilder.setCredentialsProvider(credentialsProvider)
+    if (channelProvider.nonEmpty) builder.setTransportChannelProvider(channelProvider.get)
+    val topicAdminClient = TopicAdminClient.create(builder.build)
 
     Try(topicAdminClient.getTopic(topicName)) match {
       case Success(topic) =>
@@ -33,12 +35,15 @@ object CreateTopic extends ChainingSyntax {
     }
   }
 
-  def createSubscription(projectId: String, topicId: String, subscriptionId: String, credentialsProvider: CredentialsProvider, channelProvider: TransportChannelProvider): Option[Subscription] = {
+  def createSubscription(projectId: String, topicId: String, subscriptionId: String, credentialsProvider: CredentialsProvider, channelProvider: Option[TransportChannelProvider]): Option[Subscription] = {
     val subName = SubscriptionName.of(projectId, subscriptionId).toString
     val topicName = TopicName.of(projectId, topicId)
     val pushConfig = PushConfig.newBuilder.build
     val ackDeadlineSeconds = 5
-    val subAdminClient = SubscriptionAdminClient.create(SubscriptionAdminSettings.newBuilder.setTransportChannelProvider(channelProvider).setCredentialsProvider(credentialsProvider).build())
+
+    val builder = SubscriptionAdminSettings.newBuilder.setCredentialsProvider(credentialsProvider)
+    if (channelProvider.nonEmpty) builder.setTransportChannelProvider(channelProvider.get)
+    val subAdminClient = SubscriptionAdminClient.create(builder.build())
 
     Try(subAdminClient.getSubscription(subName)) match {
       case Success(sub) =>
