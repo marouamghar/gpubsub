@@ -1,10 +1,10 @@
-package gpubsub
+package io.gpubsub
 
 import com.google.api.gax.core.CredentialsProvider
 import com.google.api.gax.rpc.TransportChannelProvider
 import com.google.cloud.pubsub.v1.{AckReplyConsumer, MessageReceiver, Subscriber as GoogleSubscriberClient}
 import com.google.pubsub.v1.{ProjectSubscriptionName, PubsubMessage}
-import gpubsub.*
+import io.gpubsub.*
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -14,6 +14,7 @@ abstract class GoogleSubscriberWrapper[R](implicit ec: ExecutionContext) extends
   val projectId: String
   val subscriptionId: String
   val credentialsProvider: CredentialsProvider
+  //set it to none if connecting to a real PubSub instance
   val channelProvider: Option[TransportChannelProvider]
   
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -62,6 +63,7 @@ abstract class GoogleSubscriberWrapper[R](implicit ec: ExecutionContext) extends
 
   def awaitClient(client: GoogleSubscriberClient, retries: Int): Future[Unit] =
     Future {
+      //TODO: this piece of code doesn't log all the errors happening during the process. I can mess with the channel to repro it, it fails to handle the message, but it logs nothing
       Try(client.awaitTerminated()) recover {
         case ex: Throwable => logger.error("Error during the subscriber working. Restarting it.", ex)
           stopClient(client).flatMap(_ => startClient(subscription, receiver, credentialsProvider, retries - 1))

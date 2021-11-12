@@ -1,4 +1,4 @@
-package gpubsub
+package io.gpubsub
 
 import scala.concurrent.Future
 
