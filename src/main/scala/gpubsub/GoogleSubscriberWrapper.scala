@@ -62,6 +62,7 @@ abstract class GoogleSubscriberWrapper[R](implicit ec: ExecutionContext) extends
 
   def awaitClient(client: GoogleSubscriberClient, retries: Int): Future[Unit] =
     Future {
+      //TODO: this piece of code doesn't log all the errors happening during the process. I can mess with the channel to repro it, it fails to handle the message, but it logs nothing
       Try(client.awaitTerminated()) recover {
         case ex: Throwable => logger.error("Error during the subscriber working. Restarting it.", ex)
           stopClient(client).flatMap(_ => startClient(subscription, receiver, credentialsProvider, retries - 1))

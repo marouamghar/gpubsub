@@ -1,0 +1,5 @@
+package gpubsub
+
+class CreateTopicTest {
+
+}
