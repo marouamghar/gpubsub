@@ -22,22 +22,26 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 import scala.sys.process.*
-
+import org.scalatest.BeforeAndAfterEach
 
 class GooglePubSubTest
   extends AnyFreeSpec
     with MockitoSugar
     with Matchers
-    with ScalaCheckDrivenPropertyChecks :
+    with ScalaCheckDrivenPropertyChecks 
+    with BeforeAndAfterEach :
   that =>
+
   val topicId = "topic-test-marou"
   val subscriptionId = "topic-test-marou-sub"
   val projectId = "revio-staging-320500"
-  val port = 8088
-
-  val useFakePubSub = false
-
+  val port = 8086
   val host = "localhost:" + port
+
+  override def afterEach(): Unit = 
+    super.afterEach()
+    Seq("ksh", "-c", s"kill $$(lsof -i:$port | grep LISTEN | awk '{print $$2}')") !
+
   val pubsubProcess = s"gcloud beta emulators pubsub start --host-port=$host".run()
   val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build
   val channelProvider = Some(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)));
@@ -64,7 +68,7 @@ class GooglePubSubTest
     override def handle(message: PubsubMessage): Future[Unit] =
       val data = message.getData.toString
       messagesReceived += data.substring(data.indexOf('"')+1,data.lastIndexOf('"'))
-      println(s"I handled a message with data: $data")
+      logger.info(s"I handled a message with data: $data")
       Future.unit
 
   
@@ -79,12 +83,9 @@ class GooglePubSubTest
         Thread.sleep(messagesPublished.length * 200)
       }
 
-      messagesPublished should contain theSameElementsAs messagesReceived
-
-
       Await.ready(publisher.stop(), Duration.Inf)
       Await.ready(subscriberWrapper.stopClient(sub), Duration.Inf)
 
-      Seq("ksh", "-c", s"kill $$(lsof -i:8092 | grep LISTEN | awk '{print $$2}')") !
+      messagesPublished should contain theSameElementsAs messagesReceived
     }
   }

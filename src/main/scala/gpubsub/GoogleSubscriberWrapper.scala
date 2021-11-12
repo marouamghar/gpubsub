@@ -14,6 +14,7 @@ abstract class GoogleSubscriberWrapper[R](implicit ec: ExecutionContext) extends
   val projectId: String
   val subscriptionId: String
   val credentialsProvider: CredentialsProvider
+  //set it to none if connecting to a real PubSub instance
   val channelProvider: Option[TransportChannelProvider]
   
   val logger: Logger = LoggerFactory.getLogger(this.getClass)

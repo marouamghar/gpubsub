@@ -1,2 +1,2 @@
 # gpubsub
-Library for running PubSub java clients
+WIP: Library for running PubSub java clients
